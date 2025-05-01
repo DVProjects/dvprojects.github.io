@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Decoder Base64 e IP</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        label, input, button { display: block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <label for="b64input">Input:</label>
+    <input type="text" id="b64input" size="80" placeholder="Inserisci una stringa in base64">
+    <button onclick="process()">Calcola IP</button>
+
+    <h2>IP generato:</h2>
+    <div id="result">---</div>
+
+    <script>
+    async function process() {
+        const base64Input = document.getElementById("b64input").value;
+        const resultDiv = document.getElementById("result");
+
+        // Decodifica base64 in Uint8Array
+        function base64ToBytes(base64) {
+            const binaryStr = atob(base64);
+            const len = binaryStr.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryStr.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // Carica code.bin
+        async function loadCodeBin() {
+            const response = await fetch('code.bin');
+            if (!response.ok) throw new Error("Impossibile caricare code.bin");
+            return new Uint8Array(await response.arrayBuffer());
+        }
+
+        try {
+            const inputBytes = base64ToBytes(base64Input);
+            const codeBytes = await loadCodeBin();
+
+            const minLength = Math.min(inputBytes.length, codeBytes.length);
+            const key = new Uint8Array(minLength);
+
+            for (let i = 0; i < minLength; i++) {
+                key[i] = inputBytes[i] ^ codeBytes[i];
+            }
+
+            const keyLen = key.length;
+            const ip = [
+                key[Math.floor(keyLen / 2)],
+                key[Math.floor(keyLen * 2 / 3)],
+                key[Math.floor(keyLen * 5 / 6)],
+                key[keyLen - 1]
+            ];
+
+            resultDiv.textContent = ip.join('.');
+        } catch (err) {
+            resultDiv.textContent = "Errore: " + err.message;
+        }
+    }
+    </script>
+
+</body>
+</html>
+
