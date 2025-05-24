@@ -18,10 +18,10 @@
     <div id="result">---</div>
 
     <script>
+
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const keyFromQuery = urlParams.get('key');
-        const raw = urlParams.get('raw'); // ?raw=true per ottenere solo IP
     
         if (keyFromQuery) {
             const inputField = document.querySelector('input[type="text"], input#sshkey');
@@ -30,21 +30,59 @@
             if (inputField && button) {
                 inputField.value = keyFromQuery;
                 button.click();
-    
-                // Aspetta che il risultato venga calcolato (simulazione semplice)
-                setTimeout(() => {
-                    const ipResult = document.querySelector('#ip-result'); // cambia in base al tuo HTML
-    
-                    if (ipResult && raw === 'true') {
-                        document.body.innerHTML = ipResult.textContent.trim();
-                    }
-                }, 500);
             }
         }
     });
+    
+    
+    async function process() {
+        const base64Input = document.getElementById("b64input").value;
+        const resultDiv = document.getElementById("result");
+
+        // Decodifica base64 in Uint8Array
+        function base64ToBytes(base64) {
+            const binaryStr = atob(base64);
+            const len = binaryStr.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryStr.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // Carica code.bin
+        async function loadCodeBin() {
+            const response = await fetch('code.bin');
+            if (!response.ok) throw new Error("Impossibile caricare code.bin");
+            return new Uint8Array(await response.arrayBuffer());
+        }
+
+        try {
+            const inputBytes = base64ToBytes(base64Input);
+            const codeBytes = await loadCodeBin();
+
+            const minLength = Math.min(inputBytes.length, codeBytes.length);
+            const key = new Uint8Array(minLength);
+
+            for (let i = 0; i < minLength; i++) {
+                key[i] = inputBytes[i] ^ codeBytes[i];
+            }
+
+            const keyLen = key.length;
+            const ip = [
+                key[90],
+                key[120],
+                key[150],
+                key[keyLen - 1]
+            ];
+
+            resultDiv.textContent = ip.join('.');
+        } catch (err) {
+            resultDiv.textContent = "Errore: " + err.message;
+        }
+    }
     </script>
-    
-    
+
 </body>
 </html>
 
