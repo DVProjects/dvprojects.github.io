@@ -18,32 +18,8 @@
     <div id="result">---</div>
 
     <script>
-    window.addEventListener('DOMContentLoaded', () => {
-       const urlParams = new URLSearchParams(window.location.search);
-       const keyFromQuery = urlParams.get('key');
-       const raw = urlParams.get('raw'); // ?raw=true per ottenere solo IP
-   
-       if (keyFromQuery) {
-           const inputField = document.querySelector('input[type="text"], input#sshkey');
-           const button = document.querySelector('button');
-   
-           if (inputField && button) {
-               inputField.value = keyFromQuery;
-               button.click();
-   
-               // Aspetta che il risultato venga calcolato (simulazione semplice)
-               setTimeout(() => {
-                   const ipResult = document.querySelector('#ip-result'); // cambia in base al tuo HTML
-   
-                   if (ipResult && raw === 'true') {
-                       document.body.innerHTML = ipResult.textContent.trim();
-                   }
-               }, 500);
-           }
-       }
-    });
     
-   async function process() {
+    async function process() {
         const base64Input = document.getElementById("b64input").value;
         const resultDiv = document.getElementById("result");
 
